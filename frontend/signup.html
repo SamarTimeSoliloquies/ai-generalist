@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign Up · AI Generalist</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <style>
+    body { display: flex; flex-direction: column; min-height: 100vh; }
+    nav { padding: 20px 60px; }
+
+    .auth-wrapper {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+    .auth-box { width: 100%; max-width: 420px; }
+    .auth-header { text-align: center; margin-bottom: 32px; }
+    .auth-header h1 { font-family: 'Playfair Display', serif; font-size: 2rem; margin-bottom: 8px; }
+    .auth-header p { color: var(--text-muted); font-size: 0.92rem; }
+
+    .auth-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 36px 32px;
+    }
+
+    .btn-full { width: 100%; padding: 13px; font-size: 0.95rem; border-radius: 6px; margin-top: 4px; }
+
+    .auth-footer {
+      text-align: center;
+      margin-top: 20px;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+    }
+    .auth-footer a { color: var(--accent); }
+    .auth-footer a:hover { text-decoration: underline; }
+
+    .role-select {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .role-btn {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 6px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+    .role-btn .icon { font-size: 1.3rem; display: block; margin-bottom: 4px; }
+    .role-btn:hover { border-color: var(--accent); color: var(--text); }
+    .role-btn.selected { border-color: var(--accent); background: var(--accent-dim); color: var(--accent); }
+
+    .role-label { font-size: 0.85rem; color: var(--text-muted); font-weight: 500; margin-bottom: 8px; display: block; }
+
+    .error-msg {
+      background: rgba(201, 76, 76, 0.1);
+      border: 1px solid rgba(201, 76, 76, 0.4);
+      color: #e07070;
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-size: 0.87rem;
+      margin-bottom: 16px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="../index.html"><div class="logo">AI Generalist</div></a>
+  </nav>
+
+  <div class="auth-wrapper">
+    <div class="auth-box">
+
+      <div class="auth-header">
+        <h1>Create your account</h1>
+        <p>Start working smarter today — it's free</p>
+      </div>
+
+      <div class="auth-card">
+        <div class="error-msg" id="errorMsg"></div>
+
+        <div class="form-group">
+          <label for="name">Full name</label>
+          <input type="text" id="name" placeholder="e.g. Ahmed Khan"/>
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email address</label>
+          <input type="email" id="email" placeholder="you@example.com"/>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" placeholder="Min. 8 characters"/>
+        </div>
+
+        <span class="role-label">I am a...</span>
+        <div class="role-select">
+          <div class="role-btn" onclick="selectRole(this, 'lawyer')">
+            <span class="icon">⚖️</span> Lawyer
+          </div>
+          <div class="role-btn" onclick="selectRole(this, 'accountant')">
+            <span class="icon">📊</span> Accountant
+          </div>
+          <div class="role-btn" onclick="selectRole(this, 'doctor')">
+            <span class="icon">🩺</span> Doctor
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-full" onclick="handleSignup()">Create Account</button>
+
+        <div class="auth-footer" style="margin-top:16px">
+          Already have an account? <a href="login.html">Log in</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <footer>© 2025 AI Generalist</footer>
+
+  <script>
+    let selectedRole = '';
+
+    function selectRole(el, role) {
+      document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('selected'));
+      el.classList.add('selected');
+      selectedRole = role;
+    }
+
+    function handleSignup() {
+      const name = document.getElementById('name').value;
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const errorMsg = document.getElementById('errorMsg');
+
+      if (!name || !email || !password) {
+        errorMsg.textContent = 'Please fill in all fields.';
+        errorMsg.style.display = 'block';
+        return;
+      }
+      if (password.length < 8) {
+        errorMsg.textContent = 'Password must be at least 8 characters.';
+        errorMsg.style.display = 'block';
+        return;
+      }
+      if (!selectedRole) {
+        errorMsg.textContent = 'Please select your profession.';
+        errorMsg.style.display = 'block';
+        return;
+      }
+
+      // Goes to dashboard (backend not connected yet)
+      window.location.href = 'dashboard.html';
+    }
+  </script>
+
+</body>
+</html>
