@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard · AI Generalist</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <style>
+    body { display: flex; flex-direction: column; min-height: 100vh; }
+
+    .dashboard {
+      flex: 1;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 52px 24px;
+      width: 100%;
+    }
+
+    .welcome { margin-bottom: 44px; }
+    .welcome h1 {
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.9rem;
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+    }
+    .welcome p { color: var(--text2); font-size: 0.9rem; }
+
+    .section-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text3);
+      margin-bottom: 14px;
+    }
+
+    .domain-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 44px;
+    }
+
+    .domain-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px 20px;
+      cursor: pointer;
+      transition: all var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    .domain-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      opacity: 0;
+      transition: opacity var(--transition);
+    }
+    .domain-card.law::before { background: var(--law); }
+    .domain-card.accounting::before { background: var(--accounting); }
+    .domain-card.medicine::before { background: var(--medicine); }
+
+    .domain-card:hover { transform: translateY(-2px); border-color: var(--border2); }
+    .domain-card:hover::before { opacity: 1; }
+    .domain-card.law:hover { border-color: rgba(96,165,250,0.3); }
+    .domain-card.accounting:hover { border-color: rgba(52,211,153,0.3); }
+    .domain-card.medicine:hover { border-color: rgba(248,113,113,0.3); }
+
+    .d-icon {
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+      margin-bottom: 14px;
+    }
+    .law .d-icon { background: rgba(96,165,250,0.1); }
+    .accounting .d-icon { background: rgba(52,211,153,0.1); }
+    .medicine .d-icon { background: rgba(248,113,113,0.1); }
+
+    .domain-card h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 6px; }
+    .domain-card p { color: var(--text2); font-size: 0.82rem; line-height: 1.5; margin-bottom: 14px; }
+    .domain-arrow { font-size: 0.8rem; color: var(--text3); }
+
+    /* RECENT */
+    .recent-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .recent-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: border-color var(--transition);
+    }
+    .recent-item:hover { border-color: var(--border2); }
+
+    .recent-left { display: flex; align-items: center; gap: 12px; }
+
+    .tag {
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 12px;
+      letter-spacing: 0.3px;
+    }
+    .tag-law { background: rgba(96,165,250,0.1); color: var(--law); }
+    .tag-accounting { background: rgba(52,211,153,0.1); color: var(--accounting); }
+    .tag-medicine { background: rgba(248,113,113,0.1); color: var(--medicine); }
+
+    .recent-title { font-size: 0.88rem; }
+    .recent-date { color: var(--text3); font-size: 0.8rem; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="../index.html"><div class="logo">AI Generalist</div></a>
+  <div class="nav-right">
+    <button class="theme-toggle" onclick="toggleTheme()">
+      <span class="icon-moon">🌙</span>
+      <span class="icon-sun">☀️</span>
+    </button>
+    <a href="login.html"><button class="btn btn-ghost">Log out</button></a>
+  </div>
+</nav>
+
+<div class="dashboard">
+
+  <div class="welcome">
+    <h1>What are you working on today?</h1>
+    <p>Choose a domain to start a new session.</p>
+  </div>
+
+  <div class="section-label">Choose domain</div>
+  <div class="domain-grid">
+    <div class="domain-card law" onclick="goToChat('law')">
+      <div class="d-icon">⚖️</div>
+      <h3>Law</h3>
+      <p>Draft briefs, research statutes, interpret case law.</p>
+      <div class="domain-arrow">Start session →</div>
+    </div>
+    <div class="domain-card accounting" onclick="goToChat('accounting')">
+      <div class="d-icon">📊</div>
+      <h3>Accounting</h3>
+      <p>Tax codes, financial memos, regulatory compliance.</p>
+      <div class="domain-arrow">Start session →</div>
+    </div>
+    <div class="domain-card medicine" onclick="goToChat('medicine')">
+      <div class="d-icon">🩺</div>
+      <h3>Medicine</h3>
+      <p>Clinical summaries, drug interactions, patient records.</p>
+      <div class="domain-arrow">Start session →</div>
+    </div>
+  </div>
+
+  <div class="section-label">Recent conversations</div>
+  <div class="recent-list">
+    <div class="recent-item" onclick="goToChat('law')">
+      <div class="recent-left">
+        <span class="tag tag-law">Law</span>
+        <span class="recent-title">Property eviction rules — memo draft</span>
+      </div>
+      <span class="recent-date">2 hours ago</span>
+    </div>
+    <div class="recent-item" onclick="goToChat('accounting')">
+      <div class="recent-left">
+        <span class="tag tag-accounting">Accounting</span>
+        <span class="recent-title">Income tax filing summary 2024</span>
+      </div>
+      <span class="recent-date">Yesterday</span>
+    </div>
+    <div class="recent-item" onclick="goToChat('medicine')">
+      <div class="recent-left">
+        <span class="tag tag-medicine">Medicine</span>
+        <span class="recent-title">Patient discharge summary — Room 4B</span>
+      </div>
+      <span class="recent-date">2 days ago</span>
+    </div>
+  </div>
+
+</div>
+
+<footer>© 2025 AI Generalist</footer>
+
+<script>
+  const saved = localStorage.getItem('theme');
+  if (saved) document.documentElement.setAttribute('data-theme', saved);
+
+  function toggleTheme() {
+    const html = document.documentElement;
+    html.setAttribute('data-theme', html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+    localStorage.setItem('theme', html.getAttribute('data-theme'));
+  }
+
+  function goToChat(domain) {
+    window.location.href = `chat.html?domain=${domain}`;
+  }
+</script>
+
+</body>
+</html>

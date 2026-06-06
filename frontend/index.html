@@ -1,233 +1,299 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>AI Generalist</title>
   <link rel="stylesheet" href="css/style.css"/>
   <style>
+    body { display: flex; flex-direction: column; }
+
+    /* HERO */
     .hero {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
       text-align: center;
-      padding: 100px 60px 80px;
-      max-width: 800px;
-      margin: 0 auto;
+      padding: 90px 24px 70px;
     }
-    .hero-tag {
-      display: inline-block;
-      background: var(--accent-dim);
-      color: var(--accent);
-      border: 1px solid var(--accent);
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--accent-glow);
+      border: 1px solid rgba(123,108,255,0.3);
+      color: var(--accent2);
       border-radius: 20px;
-      padding: 5px 16px;
-      font-size: 0.8rem;
+      padding: 5px 14px;
+      font-size: 0.75rem;
       font-weight: 500;
-      margin-bottom: 28px;
-      letter-spacing: 1px;
-      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 32px;
     }
+    .badge-dot {
+      width: 6px; height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+    }
+
     .hero h1 {
-      font-family: 'Playfair Display', serif;
-      font-size: 3.5rem;
-      line-height: 1.2;
+      font-family: 'Instrument Serif', serif;
+      font-size: clamp(2.4rem, 6vw, 4rem);
+      line-height: 1.15;
+      letter-spacing: -0.02em;
       margin-bottom: 20px;
+      max-width: 700px;
     }
-    .hero h1 span { color: var(--accent); }
+    .hero h1 em {
+      font-style: italic;
+      color: var(--accent2);
+    }
+
     .hero p {
-      color: var(--text-muted);
-      font-size: 1.1rem;
+      color: var(--text2);
+      font-size: 1rem;
       line-height: 1.7;
+      max-width: 500px;
       margin-bottom: 36px;
-      max-width: 580px;
-      margin-left: auto;
-      margin-right: auto;
     }
-    .hero-btns { display: flex; gap: 14px; justify-content: center; }
+
+    .hero-btns { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+
+    /* DIVIDER */
+    .divider-line {
+      width: 100%;
+      height: 1px;
+      background: var(--border);
+      margin: 0;
+    }
 
     /* DOMAINS */
     .domains {
-      padding: 60px;
-      max-width: 1000px;
+      padding: 72px 32px;
+      max-width: 960px;
       margin: 0 auto;
+      width: 100%;
     }
-    .section-title {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.8rem;
-      text-align: center;
+
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text3);
       margin-bottom: 10px;
     }
-    .section-sub {
-      text-align: center;
-      color: var(--text-muted);
-      margin-bottom: 40px;
-      font-size: 0.95rem;
+
+    .section-title {
+      font-family: 'Instrument Serif', serif;
+      font-size: 2rem;
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
     }
+
+    .section-sub {
+      color: var(--text2);
+      font-size: 0.9rem;
+      margin-bottom: 40px;
+    }
+
     .domain-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
+      gap: 16px;
     }
+
     .domain-card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 32px 24px;
-      text-align: center;
-      transition: transform 0.2s, border-color 0.2s;
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      transition: all var(--transition);
+      position: relative;
+      overflow: hidden;
     }
-    .domain-card:hover { transform: translateY(-4px); }
-    .domain-card.law:hover { border-color: var(--law); }
-    .domain-card.accounting:hover { border-color: var(--accounting); }
-    .domain-card.medicine:hover { border-color: var(--medicine); }
-    .domain-icon { font-size: 2.2rem; margin-bottom: 14px; }
-    .domain-card h3 { font-family: 'Playfair Display', serif; font-size: 1.2rem; margin-bottom: 10px; }
-    .domain-card p { color: var(--text-muted); font-size: 0.88rem; line-height: 1.6; }
+    .domain-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity var(--transition);
+    }
+    .domain-card.law::after { background: radial-gradient(circle at top left, rgba(96,165,250,0.06), transparent 60%); }
+    .domain-card.accounting::after { background: radial-gradient(circle at top left, rgba(52,211,153,0.06), transparent 60%); }
+    .domain-card.medicine::after { background: radial-gradient(circle at top left, rgba(248,113,113,0.06), transparent 60%); }
+
+    .domain-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+    .domain-card:hover::after { opacity: 1; }
+    .domain-card.law:hover { border-color: rgba(96,165,250,0.3); }
+    .domain-card.accounting:hover { border-color: rgba(52,211,153,0.3); }
+    .domain-card.medicine:hover { border-color: rgba(248,113,113,0.3); }
+
+    .domain-icon {
+      width: 40px; height: 40px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem;
+      margin-bottom: 16px;
+    }
+    .law .domain-icon { background: rgba(96,165,250,0.1); }
+    .accounting .domain-icon { background: rgba(52,211,153,0.1); }
+    .medicine .domain-icon { background: rgba(248,113,113,0.1); }
+
+    .domain-card h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .domain-card p { color: var(--text2); font-size: 0.85rem; line-height: 1.6; }
 
     /* HOW IT WORKS */
     .how {
-      padding: 60px;
-      max-width: 900px;
-      margin: 0 auto;
+      padding: 72px 32px;
+      border-top: 1px solid var(--border);
+      background: var(--bg2);
     }
-    .steps { display: flex; flex-direction: column; gap: 16px; margin-top: 40px; }
+    .how-inner { max-width: 680px; margin: 0 auto; }
+
+    .steps { display: flex; flex-direction: column; gap: 0; margin-top: 36px; }
+
     .step {
       display: flex;
-      align-items: flex-start;
       gap: 20px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 22px 24px;
+      padding: 20px 0;
+      border-bottom: 1px solid var(--border);
     }
+    .step:last-child { border-bottom: none; }
+
     .step-num {
-      background: var(--accent-dim);
-      color: var(--accent);
-      border: 1px solid var(--accent);
+      width: 28px; height: 28px;
       border-radius: 50%;
-      width: 36px;
-      height: 36px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      font-size: 0.9rem;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--accent2);
       flex-shrink: 0;
+      margin-top: 2px;
     }
-    .step h4 { font-size: 1rem; margin-bottom: 4px; }
-    .step p { color: var(--text-muted); font-size: 0.88rem; line-height: 1.6; }
+
+    .step h4 { font-size: 0.95rem; font-weight: 600; margin-bottom: 4px; }
+    .step p { color: var(--text2); font-size: 0.85rem; line-height: 1.6; }
 
     /* CTA */
     .cta {
       text-align: center;
-      padding: 80px 60px;
-      background: var(--surface);
+      padding: 80px 24px;
       border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-      margin-top: 60px;
     }
-    .cta h2 { font-family: 'Playfair Display', serif; font-size: 2rem; margin-bottom: 14px; }
-    .cta p { color: var(--text-muted); margin-bottom: 30px; }
+    .cta h2 {
+      font-family: 'Instrument Serif', serif;
+      font-size: 2rem;
+      letter-spacing: -0.02em;
+      margin-bottom: 12px;
+    }
+    .cta p { color: var(--text2); margin-bottom: 28px; font-size: 0.9rem; }
   </style>
 </head>
 <body>
 
-  <nav>
-    <div class="logo">AI Generalist</div>
-    <div class="nav-links">
-      <a href="pages/login.html"><button class="btn btn-ghost">Log In</button></a>
-      <a href="pages/signup.html"><button class="btn btn-primary">Get Started</button></a>
-    </div>
-  </nav>
+<nav>
+  <div class="logo">AI Generalist</div>
+  <div class="nav-right">
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+      <span class="icon-moon">🌙</span>
+      <span class="icon-sun">☀️</span>
+    </button>
+    <a href="pages/login.html"><button class="btn btn-ghost">Log in</button></a>
+    <a href="pages/signup.html"><button class="btn btn-primary">Get started</button></a>
+  </div>
+</nav>
 
-  <section class="hero">
-    <div class="hero-tag">RAG-Powered · Hallucination-Free</div>
-    <h1>Your AI Consultant for <span>High-Stakes</span> Decisions</h1>
-    <p>AI Generalist gives lawyers, accountants, and doctors an AI that only answers from real, verified documents — no made-up facts, ever.</p>
-    <div class="hero-btns">
-      <a href="pages/signup.html"><button class="btn btn-primary">Start for Free</button></a>
-      <a href="#how"><button class="btn btn-outline">See How It Works</button></a>
-    </div>
-  </section>
+<section class="hero">
+  <div class="badge"><span class="badge-dot"></span> RAG-Powered · Hallucination-Free</div>
+  <h1>AI consultant for<br/><em>high-stakes</em> professionals</h1>
+  <p>Lawyers, accountants, and doctors — get instant answers and drafted documents, grounded only in your uploaded files. No hallucinations.</p>
+  <div class="hero-btns">
+    <a href="pages/signup.html"><button class="btn btn-primary">Start for free</button></a>
+    <a href="#how"><button class="btn btn-ghost">See how it works</button></a>
+  </div>
+</section>
 
-  <section class="domains">
-    <h2 class="section-title">Built for Three Domains</h2>
-    <p class="section-sub">Upload your documents. Ask your questions. Get accurate, sourced answers.</p>
-    <div class="domain-grid">
-      <div class="domain-card law">
-        <div class="domain-icon">⚖️</div>
-        <h3>Law</h3>
-        <p>Draft legal briefs, research case law, and interpret statutes — all grounded in your uploaded legal documents.</p>
-      </div>
-      <div class="domain-card accounting">
-        <div class="domain-icon">📊</div>
-        <h3>Accounting</h3>
-        <p>Analyze tax codes, generate financial memos, and clarify regulations with pinpoint accuracy.</p>
-      </div>
-      <div class="domain-card medicine">
-        <div class="domain-icon">🩺</div>
-        <h3>Medicine</h3>
-        <p>Summarize patient records, look up drug interactions, and draft clinical reports based on verified medical literature.</p>
-      </div>
-    </div>
-  </section>
+<div class="divider-line"></div>
 
-  <section class="how" id="how">
-    <h2 class="section-title">How It Works</h2>
-    <p class="section-sub">Seven steps from question to perfect document.</p>
+<section class="domains">
+  <div class="section-label">What we cover</div>
+  <h2 class="section-title">Three domains, one platform</h2>
+  <p class="section-sub">Upload your documents. Ask anything. Get sourced, accurate answers.</p>
+  <div class="domain-grid">
+    <div class="domain-card law">
+      <div class="domain-icon">⚖️</div>
+      <h3>Law</h3>
+      <p>Draft legal briefs, research statutes, and interpret case law — all from your own uploaded documents.</p>
+    </div>
+    <div class="domain-card accounting">
+      <div class="domain-icon">📊</div>
+      <h3>Accounting</h3>
+      <p>Analyze tax codes, generate compliance memos, and clarify regulations with full accuracy.</p>
+    </div>
+    <div class="domain-card medicine">
+      <div class="domain-icon">🩺</div>
+      <h3>Medicine</h3>
+      <p>Summarize patient records, check drug interactions, and draft clinical reports from verified literature.</p>
+    </div>
+  </div>
+</section>
+
+<section class="how" id="how">
+  <div class="how-inner">
+    <div class="section-label">How it works</div>
+    <h2 class="section-title">From question to document in seconds</h2>
     <div class="steps">
       <div class="step">
         <div class="step-num">1</div>
-        <div>
-          <h4>You log in and choose your domain</h4>
-          <p>Select Law, Accounting, or Medicine from your dashboard.</p>
-        </div>
+        <div><h4>Log in and choose your domain</h4><p>Select Law, Accounting, or Medicine from your dashboard.</p></div>
       </div>
       <div class="step">
         <div class="step-num">2</div>
-        <div>
-          <h4>Upload your documents</h4>
-          <p>PDFs, legal acts, medical literature — the AI only uses what you give it.</p>
-        </div>
+        <div><h4>Upload your documents</h4><p>PDFs, legal acts, medical literature — the AI only uses what you give it.</p></div>
       </div>
       <div class="step">
         <div class="step-num">3</div>
-        <div>
-          <h4>Ask your question</h4>
-          <p>Type naturally. "Draft a memo on property eviction rules."</p>
-        </div>
+        <div><h4>Ask your question</h4><p>Type naturally. "Draft a memo on property eviction rules."</p></div>
       </div>
       <div class="step">
         <div class="step-num">4</div>
-        <div>
-          <h4>The AI searches your documents</h4>
-          <p>It finds the exact paragraphs that answer your question — no guessing.</p>
-        </div>
+        <div><h4>RAG retrieves the exact paragraphs</h4><p>The system searches your documents by meaning, not just keywords.</p></div>
       </div>
       <div class="step">
         <div class="step-num">5</div>
-        <div>
-          <h4>A draft is created and reviewed</h4>
-          <p>An agentic loop drafts the document, then a reviewer AI checks it for errors automatically.</p>
-        </div>
-      </div>
-      <div class="step">
-        <div class="step-num">6</div>
-        <div>
-          <h4>The final document appears on your screen</h4>
-          <p>Accurate, formatted, and ready to use — in seconds.</p>
-        </div>
+        <div><h4>AI drafts and reviews the answer</h4><p>An agentic loop drafts the response, checks it for accuracy, then delivers it.</p></div>
       </div>
     </div>
-  </section>
+  </div>
+</section>
 
-  <section class="cta">
-    <h2>Ready to work smarter?</h2>
-    <p>Join professionals who trust AI Generalist for high-stakes work.</p>
-    <a href="pages/signup.html"><button class="btn btn-primary">Create Free Account</button></a>
-  </section>
+<section class="cta">
+  <h2>Ready to work smarter?</h2>
+  <p>Join professionals who trust AI Generalist for high-stakes work.</p>
+  <a href="pages/signup.html"><button class="btn btn-primary">Create free account</button></a>
+</section>
 
-  <footer>
-    © 2025 AI Generalist · Built for professionals who can't afford mistakes.
-  </footer>
+<footer>© 2025 AI Generalist · Built for professionals who cannot afford mistakes.</footer>
+
+<script>
+  function toggleTheme() {
+    const html = document.documentElement;
+    html.setAttribute('data-theme', html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+    localStorage.setItem('theme', html.getAttribute('data-theme'));
+  }
+  const saved = localStorage.getItem('theme');
+  if (saved) document.documentElement.setAttribute('data-theme', saved);
+</script>
 
 </body>
 </html>

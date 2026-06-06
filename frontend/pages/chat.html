@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Chat · AI Generalist</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    nav { flex-shrink: 0; }
+
+    .app { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: 252px;
+      flex-shrink: 0;
+      background: var(--bg2);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+      overflow-y: auto;
+      gap: 16px;
+    }
+
+    .domain-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--accent-glow);
+      border: 1px solid rgba(123,108,255,0.25);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+    .domain-pill .d-icon { font-size: 1.1rem; }
+    .domain-pill .d-label { font-size: 0.88rem; font-weight: 600; color: var(--accent2); }
+
+    .sidebar-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 1.3px;
+      text-transform: uppercase;
+      color: var(--text3);
+    }
+
+    .upload-area {
+      border: 1px dashed var(--border2);
+      border-radius: 8px;
+      padding: 18px 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+    .upload-area:hover { border-color: var(--accent); background: var(--accent-glow); }
+    .upload-icon { font-size: 1.4rem; margin-bottom: 6px; }
+    .upload-area p { font-size: 0.78rem; color: var(--text3); line-height: 1.5; }
+    .upload-area input { display: none; }
+
+    .file-list { display: flex; flex-direction: column; gap: 6px; }
+    .file-chip {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 7px 10px;
+      font-size: 0.78rem;
+      color: var(--text2);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      overflow: hidden;
+    }
+    .file-chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+
+    .sidebar-bottom { margin-top: auto; }
+
+    /* ── CHAT MAIN ── */
+    .chat-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+    .chat-header {
+      padding: 14px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .chat-header-icon { font-size: 1.1rem; }
+    .chat-header-sub { font-size: 0.75rem; color: var(--text3); }
+    .chat-header-title { font-size: 0.92rem; font-weight: 600; }
+
+    /* ── MESSAGES ── */
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 28px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .messages::-webkit-scrollbar { width: 4px; }
+    .messages::-webkit-scrollbar-track { background: transparent; }
+    .messages::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+    .msg { display: flex; gap: 10px; max-width: 78%; }
+    .msg.user { align-self: flex-end; flex-direction: row-reverse; }
+
+    .avatar {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    .avatar.ai-av { background: var(--accent-glow); border: 1px solid rgba(123,108,255,0.3); color: var(--accent2); }
+    .avatar.user-av { background: var(--surface2); color: var(--text2); }
+
+    .bubble {
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      line-height: 1.65;
+    }
+    .msg.ai .bubble {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-top-left-radius: 2px;
+    }
+    .msg.user .bubble {
+      background: var(--accent);
+      color: #fff;
+      border-top-right-radius: 2px;
+    }
+
+    /* thinking dots */
+    .thinking { display: flex; gap: 4px; align-items: center; padding: 12px 14px; }
+    .dot {
+      width: 6px; height: 6px;
+      background: var(--text3);
+      border-radius: 50%;
+      animation: bounce 1.2s infinite;
+    }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce {
+      0%,60%,100% { transform: translateY(0); }
+      30% { transform: translateY(-5px); }
+    }
+
+    /* ── EMPTY STATE ── */
+    .empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      padding: 40px;
+      text-align: center;
+    }
+    .empty-icon { font-size: 2.4rem; opacity: 0.3; }
+    .empty-state h3 {
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.3rem;
+      letter-spacing: -0.01em;
+    }
+    .empty-state p { color: var(--text2); font-size: 0.85rem; max-width: 340px; }
+
+    .suggestions { display: flex; flex-direction: column; gap: 7px; margin-top: 6px; width: 100%; max-width: 400px; }
+    .suggestion {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 16px;
+      font-size: 0.83rem;
+      cursor: pointer;
+      color: var(--text2);
+      transition: all var(--transition);
+      text-align: left;
+    }
+    .suggestion:hover { border-color: var(--accent); color: var(--accent2); }
+
+    /* ── INPUT BAR ── */
+    .input-bar {
+      padding: 14px 24px 18px;
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .input-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      padding: 10px 12px;
+      transition: border-color var(--transition);
+    }
+    .input-row:focus-within { border-color: var(--accent); }
+
+    .input-row textarea {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-size: 0.88rem;
+      resize: none;
+      min-height: 22px;
+      max-height: 120px;
+      line-height: 1.55;
+    }
+    .input-row textarea::placeholder { color: var(--text3); }
+
+    .send-btn {
+      width: 34px; height: 34px;
+      background: var(--accent);
+      border: none;
+      border-radius: 7px;
+      color: #fff;
+      font-size: 0.9rem;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: background var(--transition);
+    }
+    .send-btn:hover { background: var(--accent2); }
+    .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .input-hint { font-size: 0.73rem; color: var(--text3); margin-top: 7px; text-align: center; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="../index.html"><div class="logo">AI Generalist</div></a>
+  <div class="nav-right">
+    <button class="theme-toggle" onclick="toggleTheme()">
+      <span class="icon-moon">🌙</span>
+      <span class="icon-sun">☀️</span>
+    </button>
+    <a href="dashboard.html"><button class="btn btn-ghost">← Dashboard</button></a>
+    <a href="login.html"><button class="btn btn-ghost">Log out</button></a>
+  </div>
+</nav>
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="domain-pill">
+      <span class="d-icon" id="sideIcon">⚖️</span>
+      <span class="d-label" id="sideLabel">Law</span>
+    </div>
+
+    <div class="sidebar-label">Upload documents</div>
+
+    <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+      <div class="upload-icon">📄</div>
+      <p>Click to upload a PDF<br/>Used as AI context</p>
+      <input type="file" id="fileInput" accept=".pdf" onchange="handleUpload(event)"/>
+    </div>
+
+    <div id="fileListWrap" style="display:none">
+      <div class="sidebar-label" style="margin-bottom:8px">Uploaded files</div>
+      <div class="file-list" id="fileList"></div>
+    </div>
+
+    <div class="sidebar-bottom">
+      <button class="btn btn-outline" style="width:100%;justify-content:center" onclick="newChat()">+ New chat</button>
+    </div>
+  </div>
+
+  <!-- CHAT MAIN -->
+  <div class="chat-main">
+
+    <div class="chat-header">
+      <span class="chat-header-icon" id="headerIcon">⚖️</span>
+      <div>
+        <div class="chat-header-sub">AI Generalist</div>
+        <div class="chat-header-title" id="headerTitle">Legal Assistant</div>
+      </div>
+    </div>
+
+    <div class="empty-state" id="emptyState">
+      <div class="empty-icon" id="emptyIcon">⚖️</div>
+      <h3>How can I help you today?</h3>
+      <p>Upload a document and ask a question, or try one of these:</p>
+      <div class="suggestions" id="suggestions"></div>
+    </div>
+
+    <div class="messages" id="messages" style="display:none"></div>
+
+    <div class="input-bar">
+      <div class="input-row">
+        <textarea id="userInput" placeholder="Ask a question or request a document draft..." rows="1"
+          onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+        <button class="send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
+      </div>
+      <div class="input-hint">Answers are based only on your uploaded documents · Not legal/medical advice</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const saved = localStorage.getItem('theme');
+  if (saved) document.documentElement.setAttribute('data-theme', saved);
+
+  function toggleTheme() {
+    const html = document.documentElement;
+    html.setAttribute('data-theme', html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+    localStorage.setItem('theme', html.getAttribute('data-theme'));
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const domain = params.get('domain') || 'law';
+
+  const domainConfig = {
+    law: {
+      icon: '⚖️', label: 'Law', title: 'Legal Assistant',
+      suggestions: ['Draft a memo on property eviction rules', 'Summarize tenant rights under the Rent Act', 'What are the penalties for contract breach?']
+    },
+    accounting: {
+      icon: '📊', label: 'Accounting', title: 'Accounting Assistant',
+      suggestions: ['Summarize income tax filing requirements', 'What deductions apply to small businesses?', 'Draft a financial compliance memo']
+    },
+    medicine: {
+      icon: '🩺', label: 'Medicine', title: 'Medical Assistant',
+      suggestions: ['Draft a patient discharge summary', 'What are the contraindications for ibuprofen?', 'Summarize post-operative care instructions']
+    }
+  };
+
+  const cfg = domainConfig[domain];
+  document.getElementById('sideIcon').textContent = cfg.icon;
+  document.getElementById('sideLabel').textContent = cfg.label;
+  document.getElementById('headerIcon').textContent = cfg.icon;
+  document.getElementById('headerTitle').textContent = cfg.title;
+  document.getElementById('emptyIcon').textContent = cfg.icon;
+
+  cfg.suggestions.forEach(s => {
+    const el = document.createElement('div');
+    el.className = 'suggestion';
+    el.textContent = s;
+    el.onclick = () => { document.getElementById('userInput').value = s; sendMessage(); };
+    document.getElementById('suggestions').appendChild(el);
+  });
+
+  async function sendMessage() {
+    const input = document.getElementById('userInput');
+    const text = input.value.trim();
+    if (!text) return;
+
+    document.getElementById('emptyState').style.display = 'none';
+    document.getElementById('messages').style.display = 'flex';
+
+    addMessage('user', text);
+    input.value = '';
+    autoResize(input);
+
+    const thinkingId = addThinking();
+    document.getElementById('sendBtn').disabled = true;
+
+    try {
+      const res = await fetch('http://127.0.0.1:8000/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: text, domain })
+      });
+      const data = await res.json();
+      removeThinking(thinkingId);
+      addMessage('ai', data.answer);
+    } catch (e) {
+      removeThinking(thinkingId);
+      addMessage('ai', 'Could not reach the backend. Make sure the server is running at http://127.0.0.1:8000');
+    }
+
+    document.getElementById('sendBtn').disabled = false;
+  }
+
+  async function handleUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    document.getElementById('fileListWrap').style.display = 'block';
+    const chip = document.createElement('div');
+    chip.className = 'file-chip';
+    chip.innerHTML = `📄 <span>${file.name} — uploading...</span>`;
+    document.getElementById('fileList').appendChild(chip);
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch('http://127.0.0.1:8000/upload', { method: 'POST', body: formData });
+      await res.json();
+      chip.innerHTML = `📄 <span>${file.name} ✅</span>`;
+    } catch (e) {
+      chip.innerHTML = `📄 <span>${file.name} ❌ failed</span>`;
+    }
+  }
+
+  function addMessage(role, text) {
+    const msgs = document.getElementById('messages');
+    const div = document.createElement('div');
+    div.className = `msg ${role}`;
+    div.innerHTML = `
+      <div class="avatar ${role === 'user' ? 'user-av' : 'ai-av'}">${role === 'user' ? 'You' : 'AI'}</div>
+      <div class="bubble">${text}</div>
+    `;
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  function addThinking() {
+    const msgs = document.getElementById('messages');
+    const id = 'think-' + Date.now();
+    const div = document.createElement('div');
+    div.className = 'msg ai'; div.id = id;
+    div.innerHTML = `<div class="avatar ai-av">AI</div><div class="bubble thinking"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+    return id;
+  }
+
+  function removeThinking(id) { document.getElementById(id)?.remove(); }
+
+  function handleKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }
+
+  function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 120) + 'px'; }
+
+  function newChat() {
+    document.getElementById('messages').innerHTML = '';
+    document.getElementById('messages').style.display = 'none';
+    document.getElementById('emptyState').style.display = 'flex';
+  }
+</script>
+
+</body>
+</html>
