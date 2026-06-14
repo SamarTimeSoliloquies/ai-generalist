@@ -29,6 +29,11 @@ class ChatResponse(BaseModel):
     session_id: str
     sources: list = []
 
+class FileTrackRequest(BaseModel):
+    session_id: str
+    filename: str
+
+
 @app.get("/")
 def root():
     return {"status": "AI Generalist API is running"}
@@ -51,6 +56,23 @@ async def upload_pdf(
         "chunks_created": chunks_created
     }
 
+@app.post("/track-file")
+async def track_file(request: FileTrackRequest):
+    from supabase import create_client
+    supabase_client = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_KEY"))
+    
+    existing = supabase_client.table("conversations").select("*").eq("session_id", request.session_id).execute()
+    
+    if existing.data:
+        files = existing.data[0].get("uploaded_files") or []
+        if request.filename not in files:
+            files.append(request.filename)
+        supabase_client.table("conversations").update({
+            "uploaded_files": files
+        }).eq("session_id", request.session_id).execute()
+    
+    return {"status": "tracked"}
+
 @app.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
     if not request.question.strip():
@@ -64,8 +86,15 @@ async def chat(request: ChatRequest):
 
 @app.get("/history/{session_id}")
 async def history(session_id: str):
-    messages = get_chat_history(session_id)
-    return {"messages": messages}
+    from supabase import create_client
+    supabase_client = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_KEY"))
+    result = supabase_client.table("conversations").select("*").eq("session_id", session_id).execute()
+    if result.data:
+        return {
+            "messages": result.data[0]["messages"],
+            "uploaded_files": result.data[0].get("uploaded_files") or []
+        }
+    return {"messages": [], "uploaded_files": []}
 
 @app.get("/conversations")
 async def get_conversations(user_id: str = None):

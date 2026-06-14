@@ -231,6 +231,8 @@
   const SUPABASE_KEY = 'sb_publishable_1QX7HZ5MNd3tWzfKIOICHw_8grUCXXo';
   const { createClient } = supabase;
   const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+  let sessionId = localStorage.getItem('session_id') || null;
+  let pendingFiles = [];
 
    async function checkAuth() {
     const { data: { session } } = await supabaseClient.auth.getSession();
@@ -260,7 +262,6 @@
 
   const params = new URLSearchParams(window.location.search);
   const domain = params.get('domain') || 'law';
-  let sessionId = localStorage.getItem('session_id') || null;
 
   // Set upload domain dropdown to match chat domain
   document.getElementById('uploadDomain').value = domain;
@@ -304,6 +305,15 @@
     try {
       const res = await fetch(`http://127.0.0.1:8000/history/${sessionId}`);
       const data = await res.json();
+      if (data.uploaded_files && data.uploaded_files.length > 0) {
+        document.getElementById('fileListWrap').style.display = 'block';
+        data.uploaded_files.forEach(filename => {
+        const chip = document.createElement('div');
+        chip.className = 'file-chip';
+        chip.innerHTML = `📄 <span>${filename} ✅</span>`;
+        document.getElementById('fileList').appendChild(chip);
+         });
+      }
       if (data.messages && data.messages.length > 0) {
         document.getElementById('emptyState').style.display = 'none';
         document.getElementById('messages').style.display = 'flex';
@@ -351,6 +361,16 @@
       addMessage('ai', data.answer, data.sources || []);
       sessionId = data.session_id;
       localStorage.setItem('session_id', sessionId);
+
+      for (const filename of pendingFiles) {
+        await fetch('http://127.0.0.1:8000/track-file', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_id: sessionId, filename })
+        });
+      }
+      pendingFiles = [];
+
     } catch (e) {
       removeThinking(thinkingId);
       addMessage('ai', 'Could not reach the backend. Make sure the server is running at http://127.0.0.1:8000');
@@ -382,6 +402,7 @@
       } else {
         chip.innerHTML = `📄 <span>${file.name} ✅</span>`;
       }
+      pendingFiles.push(file.name);
     } catch (e) {
       chip.innerHTML = `📄 <span>${file.name} ❌ failed</span>`;
     }
