@@ -184,6 +184,10 @@
   const { createClient } = supabase;
   const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
 
+  window.addEventListener('pageshow', function() {
+  checkAuth();
+  });
+
   async function checkAuth() {
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (!session) {

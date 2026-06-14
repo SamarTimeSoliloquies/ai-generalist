@@ -61,27 +61,34 @@ def load_pdf(file_path: str, domain: str = "law"):
 
 def get_relevant_chunks(question: str, domain: str, k: int = 15):
     question_embedding = embeddings.embed_query(question)
-        
+
     result = supabase.rpc("match_chunks", {
         "query_embedding": question_embedding,
         "match_count": k,
         "filter_domain": None if domain == "general" else domain
     }).execute()
 
-    return [row["chunk_text"] for row in result.data]
+    chunks = []
+    sources = []
+    for row in result.data:
+        chunks.append(row["chunk_text"])
+        sources.append(row.get("filename", "Unknown document"))
+    
+    return chunks, sources
 
-def ask_question(question: str, domain: str) -> str:
+def ask_question(question: str, domain: str):
     cache_key = f"{domain}:{question.strip().lower()}"
     cached = redis.get(cache_key)
     if cached:
-        return cached
+        return cached, []
 
-    chunks = get_relevant_chunks(question, domain)
+    chunks, sources = get_relevant_chunks(question, domain)
 
     if not chunks:
-        return "I could not find relevant information in the available documents for this query."
+        return "I could not find relevant information in the available documents for this query.", []
 
     context = "\n\n".join(chunks)
+    unique_sources = list(set(sources))
 
     llm = ChatGroq(
         model="llama-3.1-8b-instant",
@@ -114,29 +121,29 @@ def ask_question(question: str, domain: str) -> str:
     if "could not find" not in answer.lower():
         redis.set(cache_key, answer)
 
-    return answer
+    return answer, unique_sources
 
-def save_message(session_id: str, domain: str, user_message: str, ai_response: str, user_id: str = None):
+def save_message(session_id: str, domain: str, user_message: str, ai_response: str, user_id: str = None, sources: list = []):
     existing = supabase.table("conversations").select("*").eq("session_id", session_id).execute()
     
     if existing.data:
         messages = existing.data[0]["messages"]
         messages.append({"role": "user", "content": user_message})
-        messages.append({"role": "ai", "content": ai_response})
+        messages.append({"role": "ai", "content": ai_response, "sources": sources})
         supabase.table("conversations").update({
             "messages": messages,
             "updated_at": "now()"
         }).eq("session_id", session_id).execute()
     else:
         supabase.table("conversations").insert({
-            "session_id": session_id,
-            "domain": domain,
-            "user_id": user_id,
-            "messages": [
-                {"role": "user", "content": user_message},
-                {"role": "ai", "content": ai_response}
-            ]
-        }).execute()
+        "session_id": session_id,
+        "domain": domain,
+        "user_id": user_id,
+        "messages": [
+            {"role": "user", "content": user_message},
+            {"role": "ai", "content": ai_response, "sources": sources}
+        ]
+    }).execute()
 
 def get_chat_history(session_id: str):
     result = supabase.table("conversations").select("*").eq("session_id", session_id).execute()

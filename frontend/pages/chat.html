@@ -138,6 +138,18 @@
     .send-btn:hover { background: var(--accent2); }
     .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
     .input-hint { font-size: 0.73rem; color: var(--text3); margin-top: 7px; text-align: center; }
+
+    .msg-content { display: flex; flex-direction: column; gap: 6px; }
+    .sources { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .sources-label { font-size: 0.75rem; color: var(--text3); }
+    .source-chip {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 3px 10px;
+      font-size: 0.73rem;
+      color: var(--text2);
+    }
   </style>
 </head>
 <body style="display:none">
@@ -295,9 +307,13 @@
       if (data.messages && data.messages.length > 0) {
         document.getElementById('emptyState').style.display = 'none';
         document.getElementById('messages').style.display = 'flex';
-        data.messages.forEach(msg => {
-          addMessage(msg.role === 'user' ? 'user' : 'ai', msg.content);
-        });
+       data.messages.forEach(msg => {
+        addMessage(
+            msg.role === 'user' ? 'user' : 'ai', 
+            msg.content,
+            msg.sources || []
+        );
+       });
       }
     } catch (e) {
       console.log('Could not load history');
@@ -332,7 +348,7 @@
       });
       const data = await res.json();
       removeThinking(thinkingId);
-      addMessage('ai', data.answer);
+      addMessage('ai', data.answer, data.sources || []);
       sessionId = data.session_id;
       localStorage.setItem('session_id', sessionId);
     } catch (e) {
@@ -371,13 +387,26 @@
     }
   }
 
-  function addMessage(role, text) {
+  function addMessage(role, text, sources = []) {
     const msgs = document.getElementById('messages');
     const div = document.createElement('div');
     div.className = `msg ${role}`;
+    
+    let sourcesHtml = '';
+    if (role === 'ai' && sources.length > 0) {
+        sourcesHtml = `
+        <div class="sources">
+            <span class="sources-label">📎 Sources:</span>
+            ${sources.map(s => `<span class="source-chip">${s}</span>`).join('')}
+        </div>`;
+    }
+    
     div.innerHTML = `
       <div class="avatar ${role === 'user' ? 'user-av' : 'ai-av'}">${role === 'user' ? 'You' : 'AI'}</div>
-      <div class="bubble">${text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br/>')}</div>
+      <div class="msg-content">
+        <div class="bubble">${text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br/>')}</div>
+        ${sourcesHtml}
+      </div>
     `;
     msgs.appendChild(div);
     msgs.scrollTop = msgs.scrollHeight;

@@ -27,6 +27,7 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     answer: str
     session_id: str
+    sources: list = []
 
 @app.get("/")
 def root():
@@ -56,10 +57,10 @@ async def chat(request: ChatRequest):
         raise HTTPException(status_code=400, detail="Question cannot be empty")
 
     session_id = request.session_id or str(uuid.uuid4())
-    answer = ask_question(request.question, request.domain)
-    save_message(session_id, request.domain, request.question, answer, request.user_id)
+    answer, sources = ask_question(request.question, request.domain)
+    save_message(session_id, request.domain, request.question, answer, request.user_id, sources)
 
-    return ChatResponse(answer=answer, session_id=session_id)
+    return ChatResponse(answer=answer, session_id=session_id, sources=sources)
 
 @app.get("/history/{session_id}")
 async def history(session_id: str):
