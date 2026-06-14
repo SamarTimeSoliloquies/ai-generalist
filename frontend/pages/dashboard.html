@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Dashboard · AI Generalist</title>
@@ -84,7 +85,6 @@
     .domain-card p { color: var(--text2); font-size: 0.82rem; line-height: 1.5; margin-bottom: 14px; }
     .domain-arrow { font-size: 0.8rem; color: var(--text3); }
 
-    /* RECENT */
     .recent-list { display: flex; flex-direction: column; gap: 8px; }
 
     .recent-item {
@@ -107,17 +107,27 @@
       font-weight: 600;
       padding: 3px 10px;
       border-radius: 12px;
-      letter-spacing: 0.3px;
     }
     .tag-law { background: rgba(96,165,250,0.1); color: var(--law); }
     .tag-accounting { background: rgba(52,211,153,0.1); color: var(--accounting); }
     .tag-medicine { background: rgba(248,113,113,0.1); color: var(--medicine); }
+    .tag-general { background: rgba(123,108,255,0.1); color: var(--accent2); }
 
     .recent-title { font-size: 0.88rem; }
-    .recent-date { color: var(--text3); font-size: 0.8rem; }
+    .recent-date { color: var(--text3); font-size: 0.8rem; white-space: nowrap; }
+
+    .empty-convos {
+      text-align: center;
+      padding: 40px;
+      color: var(--text3);
+      font-size: 0.88rem;
+      background: var(--surface);
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+    }
   </style>
 </head>
-<body>
+<body style="display:none">
 
 <nav>
   <a href="../index.html"><div class="logo">AI Generalist</div></a>
@@ -126,7 +136,7 @@
       <span class="icon-moon">🌙</span>
       <span class="icon-sun">☀️</span>
     </button>
-    <a href="login.html"><button class="btn btn-ghost">Log out</button></a>
+    <a href="#"><button class="btn btn-ghost" onclick="handleLogout()">Log out</button></a>
   </div>
 </nav>
 
@@ -160,28 +170,8 @@
   </div>
 
   <div class="section-label">Recent conversations</div>
-  <div class="recent-list">
-    <div class="recent-item" onclick="goToChat('law')">
-      <div class="recent-left">
-        <span class="tag tag-law">Law</span>
-        <span class="recent-title">Property eviction rules — memo draft</span>
-      </div>
-      <span class="recent-date">2 hours ago</span>
-    </div>
-    <div class="recent-item" onclick="goToChat('accounting')">
-      <div class="recent-left">
-        <span class="tag tag-accounting">Accounting</span>
-        <span class="recent-title">Income tax filing summary 2024</span>
-      </div>
-      <span class="recent-date">Yesterday</span>
-    </div>
-    <div class="recent-item" onclick="goToChat('medicine')">
-      <div class="recent-left">
-        <span class="tag tag-medicine">Medicine</span>
-        <span class="recent-title">Patient discharge summary — Room 4B</span>
-      </div>
-      <span class="recent-date">2 days ago</span>
-    </div>
+  <div id="recentList" class="recent-list">
+    <div style="color:var(--text3);font-size:0.88rem;padding:10px 0">Loading...</div>
   </div>
 
 </div>
@@ -189,6 +179,22 @@
 <footer>© 2025 AI Generalist</footer>
 
 <script>
+  const SUPABASE_URL = 'https://kswjqdasbffgkbohduqp.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_1QX7HZ5MNd3tWzfKIOICHw_8grUCXXo';
+  const { createClient } = supabase;
+  const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  async function checkAuth() {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) {
+      window.location.href = 'login.html';
+    } else {
+      document.body.style.display = '';
+      loadConversations();
+    }
+  }
+
+  checkAuth();
   const saved = localStorage.getItem('theme');
   if (saved) document.documentElement.setAttribute('data-theme', saved);
 
@@ -199,8 +205,60 @@
   }
 
   function goToChat(domain) {
+    localStorage.removeItem('session_id');
     window.location.href = `chat.html?domain=${domain}`;
   }
+
+  async function loadConversations() {
+    const list = document.getElementById('recentList');
+    try {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      const userId = session?.user?.id || '';
+      
+      const res = await fetch(`http://127.0.0.1:8000/conversations?user_id=${userId}`);
+      const data = await res.json();
+
+      if (!data.conversations || data.conversations.length === 0) {
+        list.innerHTML = '<div class="empty-convos">No conversations yet. Start a new chat above.</div>';
+        return;
+      }
+
+      list.innerHTML = '';
+      data.conversations.forEach(convo => {
+        const firstMsg = convo.messages?.[0]?.content || 'New conversation';
+        const domain = convo.domain || 'general';
+        const date = new Date(convo.updated_at).toLocaleDateString('en-PK', {
+          day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+        });
+
+        const item = document.createElement('div');
+        item.className = 'recent-item';
+        item.innerHTML = `
+          <div class="recent-left">
+            <span class="tag tag-${domain}">${domain.charAt(0).toUpperCase() + domain.slice(1)}</span>
+            <span class="recent-title">${firstMsg.substring(0, 60)}${firstMsg.length > 60 ? '...' : ''}</span>
+          </div>
+          <span class="recent-date">${date}</span>
+        `;
+        item.onclick = () => {
+          localStorage.setItem('session_id', convo.session_id);
+          window.location.href = `chat.html?domain=${domain}`;
+        };
+        list.appendChild(item);
+      });
+      } catch (e) {
+      list.innerHTML = '<div class="empty-convos">Could not load conversations. Make sure the backend is running.</div>';
+    }
+  }
+
+  async function handleLogout() {
+  await supabase.auth.signOut();
+  localStorage.removeItem('session_id');
+  localStorage.removeItem('user');
+  window.location.href = 'login.html';
+  }
+
+  
 </script>
 
 </body>

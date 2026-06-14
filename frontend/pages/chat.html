@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Chat · AI Generalist</title>
@@ -9,48 +10,38 @@
     *, *::before, *::after { box-sizing: border-box; }
     body { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
     nav { flex-shrink: 0; }
-
     .app { display: flex; flex: 1; overflow: hidden; }
 
-    /* ── SIDEBAR ── */
     .sidebar {
-      width: 252px;
-      flex-shrink: 0;
-      background: var(--bg2);
-      border-right: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      padding: 16px;
-      overflow-y: auto;
-      gap: 16px;
+      width: 252px; flex-shrink: 0;
+      background: var(--bg2); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; padding: 16px; overflow-y: auto; gap: 14px;
     }
 
     .domain-pill {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      background: var(--accent-glow);
-      border: 1px solid rgba(123,108,255,0.25);
-      border-radius: 8px;
-      padding: 10px 12px;
+      display: flex; align-items: center; gap: 10px;
+      background: var(--accent-glow); border: 1px solid rgba(123,108,255,0.25);
+      border-radius: 8px; padding: 10px 12px;
     }
     .domain-pill .d-icon { font-size: 1.1rem; }
     .domain-pill .d-label { font-size: 0.88rem; font-weight: 600; color: var(--accent2); }
 
     .sidebar-label {
-      font-size: 0.7rem;
-      font-weight: 600;
-      letter-spacing: 1.3px;
-      text-transform: uppercase;
-      color: var(--text3);
+      font-size: 0.7rem; font-weight: 600; letter-spacing: 1.3px;
+      text-transform: uppercase; color: var(--text3);
     }
 
+    .domain-select {
+      width: 100%; background: var(--bg); border: 1px solid var(--border2);
+      border-radius: 8px; padding: 8px 12px; color: var(--text);
+      font-family: 'Sora', sans-serif; font-size: 0.82rem; outline: none;
+      transition: border-color var(--transition);
+    }
+    .domain-select:focus { border-color: var(--accent); }
+
     .upload-area {
-      border: 1px dashed var(--border2);
-      border-radius: 8px;
-      padding: 18px 12px;
-      text-align: center;
-      cursor: pointer;
+      border: 1px dashed var(--border2); border-radius: 8px;
+      padding: 18px 12px; text-align: center; cursor: pointer;
       transition: all var(--transition);
     }
     .upload-area:hover { border-color: var(--accent); background: var(--accent-glow); }
@@ -60,44 +51,27 @@
 
     .file-list { display: flex; flex-direction: column; gap: 6px; }
     .file-chip {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 7px 10px;
-      font-size: 0.78rem;
-      color: var(--text2);
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      overflow: hidden;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 6px; padding: 7px 10px; font-size: 0.78rem;
+      color: var(--text2); display: flex; align-items: center; gap: 7px; overflow: hidden;
     }
     .file-chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
 
     .sidebar-bottom { margin-top: auto; }
 
-    /* ── CHAT MAIN ── */
     .chat-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 
     .chat-header {
-      padding: 14px 24px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-shrink: 0;
+      padding: 14px 24px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px; flex-shrink: 0;
     }
     .chat-header-icon { font-size: 1.1rem; }
     .chat-header-sub { font-size: 0.75rem; color: var(--text3); }
     .chat-header-title { font-size: 0.92rem; font-weight: 600; }
 
-    /* ── MESSAGES ── */
     .messages {
-      flex: 1;
-      overflow-y: auto;
-      padding: 28px 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
+      flex: 1; overflow-y: auto; padding: 28px 24px;
+      display: flex; flex-direction: column; gap: 18px;
     }
     .messages::-webkit-scrollbar { width: 4px; }
     .messages::-webkit-scrollbar-track { background: transparent; }
@@ -107,131 +81,66 @@
     .msg.user { align-self: flex-end; flex-direction: row-reverse; }
 
     .avatar {
-      width: 30px; height: 30px;
-      border-radius: 50%;
+      width: 30px; height: 30px; border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      font-size: 0.75rem;
-      font-weight: 600;
-      flex-shrink: 0;
+      font-size: 0.75rem; font-weight: 600; flex-shrink: 0;
     }
     .avatar.ai-av { background: var(--accent-glow); border: 1px solid rgba(123,108,255,0.3); color: var(--accent2); }
     .avatar.user-av { background: var(--surface2); color: var(--text2); }
 
-    .bubble {
-      padding: 10px 14px;
-      border-radius: 10px;
-      font-size: 0.88rem;
-      line-height: 1.65;
-    }
-    .msg.ai .bubble {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-top-left-radius: 2px;
-    }
-    .msg.user .bubble {
-      background: var(--accent);
-      color: #fff;
-      border-top-right-radius: 2px;
-    }
+    .bubble { padding: 10px 14px; border-radius: 10px; font-size: 0.88rem; line-height: 1.65; }
+    .msg.ai .bubble { background: var(--surface); border: 1px solid var(--border); border-top-left-radius: 2px; }
+    .msg.user .bubble { background: var(--accent); color: #fff; border-top-right-radius: 2px; }
 
-    /* thinking dots */
     .thinking { display: flex; gap: 4px; align-items: center; padding: 12px 14px; }
-    .dot {
-      width: 6px; height: 6px;
-      background: var(--text3);
-      border-radius: 50%;
-      animation: bounce 1.2s infinite;
-    }
+    .dot { width: 6px; height: 6px; background: var(--text3); border-radius: 50%; animation: bounce 1.2s infinite; }
     .dot:nth-child(2) { animation-delay: 0.2s; }
     .dot:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes bounce {
-      0%,60%,100% { transform: translateY(0); }
-      30% { transform: translateY(-5px); }
-    }
+    @keyframes bounce { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-5px); } }
 
-    /* ── EMPTY STATE ── */
     .empty-state {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 14px;
-      padding: 40px;
-      text-align: center;
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 14px; padding: 40px; text-align: center;
     }
     .empty-icon { font-size: 2.4rem; opacity: 0.3; }
-    .empty-state h3 {
-      font-family: 'Instrument Serif', serif;
-      font-size: 1.3rem;
-      letter-spacing: -0.01em;
-    }
+    .empty-state h3 { font-family: 'Instrument Serif', serif; font-size: 1.3rem; letter-spacing: -0.01em; }
     .empty-state p { color: var(--text2); font-size: 0.85rem; max-width: 340px; }
 
     .suggestions { display: flex; flex-direction: column; gap: 7px; margin-top: 6px; width: 100%; max-width: 400px; }
     .suggestion {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 9px 16px;
-      font-size: 0.83rem;
-      cursor: pointer;
-      color: var(--text2);
-      transition: all var(--transition);
-      text-align: left;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 9px 16px; font-size: 0.83rem;
+      cursor: pointer; color: var(--text2); transition: all var(--transition); text-align: left;
     }
     .suggestion:hover { border-color: var(--accent); color: var(--accent2); }
 
-    /* ── INPUT BAR ── */
-    .input-bar {
-      padding: 14px 24px 18px;
-      border-top: 1px solid var(--border);
-      flex-shrink: 0;
-    }
+    .input-bar { padding: 14px 24px 18px; border-top: 1px solid var(--border); flex-shrink: 0; }
     .input-row {
-      display: flex;
-      align-items: flex-end;
-      gap: 10px;
-      background: var(--surface);
-      border: 1px solid var(--border2);
-      border-radius: 10px;
-      padding: 10px 12px;
-      transition: border-color var(--transition);
+      display: flex; align-items: flex-end; gap: 10px;
+      background: var(--surface); border: 1px solid var(--border2);
+      border-radius: 10px; padding: 10px 12px; transition: border-color var(--transition);
     }
     .input-row:focus-within { border-color: var(--accent); }
-
     .input-row textarea {
-      flex: 1;
-      background: transparent;
-      border: none;
-      outline: none;
-      color: var(--text);
-      font-size: 0.88rem;
-      resize: none;
-      min-height: 22px;
-      max-height: 120px;
-      line-height: 1.55;
+      flex: 1; background: transparent; border: none; outline: none;
+      color: var(--text); font-size: 0.88rem; resize: none;
+      min-height: 22px; max-height: 120px; line-height: 1.55;
     }
     .input-row textarea::placeholder { color: var(--text3); }
 
     .send-btn {
-      width: 34px; height: 34px;
-      background: var(--accent);
-      border: none;
-      border-radius: 7px;
-      color: #fff;
-      font-size: 0.9rem;
+      width: 34px; height: 34px; background: var(--accent); border: none;
+      border-radius: 7px; color: #fff; font-size: 0.9rem;
       display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-      transition: background var(--transition);
+      flex-shrink: 0; transition: background var(--transition);
     }
     .send-btn:hover { background: var(--accent2); }
     .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
     .input-hint { font-size: 0.73rem; color: var(--text3); margin-top: 7px; text-align: center; }
   </style>
 </head>
-<body>
+<body style="display:none">
 
 <nav>
   <a href="../index.html"><div class="logo">AI Generalist</div></a>
@@ -241,13 +150,11 @@
       <span class="icon-sun">☀️</span>
     </button>
     <a href="dashboard.html"><button class="btn btn-ghost">← Dashboard</button></a>
-    <a href="login.html"><button class="btn btn-ghost">Log out</button></a>
-  </div>
+    <a href="#"><button class="btn btn-ghost" onclick="handleLogout()">Log out</button></a>
+  </div>  
 </nav>
 
 <div class="app">
-
-  <!-- SIDEBAR -->
   <div class="sidebar">
     <div class="domain-pill">
       <span class="d-icon" id="sideIcon">⚖️</span>
@@ -255,6 +162,12 @@
     </div>
 
     <div class="sidebar-label">Upload documents</div>
+
+    <select class="domain-select" id="uploadDomain">
+      <option value="law">⚖️ Law</option>
+      <option value="accounting">📊 Accounting</option>
+      <option value="medicine">🩺 Medicine</option>
+    </select>
 
     <div class="upload-area" onclick="document.getElementById('fileInput').click()">
       <div class="upload-icon">📄</div>
@@ -272,9 +185,7 @@
     </div>
   </div>
 
-  <!-- CHAT MAIN -->
   <div class="chat-main">
-
     <div class="chat-header">
       <span class="chat-header-icon" id="headerIcon">⚖️</span>
       <div>
@@ -300,11 +211,32 @@
       </div>
       <div class="input-hint">Answers are based only on your uploaded documents · Not legal/medical advice</div>
     </div>
-
   </div>
 </div>
 
 <script>
+  const SUPABASE_URL = 'https://kswjqdasbffgkbohduqp.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_1QX7HZ5MNd3tWzfKIOICHw_8grUCXXo';
+  const { createClient } = supabase;
+  const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+   async function checkAuth() {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) {
+      window.location.href = 'login.html';
+    } else {
+      document.body.style.display = '';
+    }
+}
+
+  checkAuth();
+
+  async function handleLogout() {
+  await supabase.auth.signOut();
+  localStorage.removeItem('session_id');
+  localStorage.removeItem('user');
+  window.location.href = 'login.html';
+  }
   const saved = localStorage.getItem('theme');
   if (saved) document.documentElement.setAttribute('data-theme', saved);
 
@@ -316,6 +248,10 @@
 
   const params = new URLSearchParams(window.location.search);
   const domain = params.get('domain') || 'law';
+  let sessionId = localStorage.getItem('session_id') || null;
+
+  // Set upload domain dropdown to match chat domain
+  document.getElementById('uploadDomain').value = domain;
 
   const domainConfig = {
     law: {
@@ -329,10 +265,14 @@
     medicine: {
       icon: '🩺', label: 'Medicine', title: 'Medical Assistant',
       suggestions: ['Draft a patient discharge summary', 'What are the contraindications for ibuprofen?', 'Summarize post-operative care instructions']
+    },
+    general: {
+      icon: '🤖', label: 'General', title: 'AI Assistant',
+      suggestions: ['Summarize the uploaded document', 'What are the key points in this file?', 'Draft a summary report']
     }
   };
 
-  const cfg = domainConfig[domain];
+  const cfg = domainConfig[domain] || domainConfig['law'];
   document.getElementById('sideIcon').textContent = cfg.icon;
   document.getElementById('sideLabel').textContent = cfg.label;
   document.getElementById('headerIcon').textContent = cfg.icon;
@@ -346,6 +286,25 @@
     el.onclick = () => { document.getElementById('userInput').value = s; sendMessage(); };
     document.getElementById('suggestions').appendChild(el);
   });
+
+  async function loadPreviousMessages() {
+    if (!sessionId) return;
+    try {
+      const res = await fetch(`http://127.0.0.1:8000/history/${sessionId}`);
+      const data = await res.json();
+      if (data.messages && data.messages.length > 0) {
+        document.getElementById('emptyState').style.display = 'none';
+        document.getElementById('messages').style.display = 'flex';
+        data.messages.forEach(msg => {
+          addMessage(msg.role === 'user' ? 'user' : 'ai', msg.content);
+        });
+      }
+    } catch (e) {
+      console.log('Could not load history');
+    }
+  }
+
+  loadPreviousMessages();
 
   async function sendMessage() {
     const input = document.getElementById('userInput');
@@ -363,14 +322,19 @@
     document.getElementById('sendBtn').disabled = true;
 
     try {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      const userId = session?.user?.id || '';
+
       const res = await fetch('http://127.0.0.1:8000/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: text, domain })
+        body: JSON.stringify({ question: text, domain, session_id: sessionId || '', user_id: userId })
       });
       const data = await res.json();
       removeThinking(thinkingId);
       addMessage('ai', data.answer);
+      sessionId = data.session_id;
+      localStorage.setItem('session_id', sessionId);
     } catch (e) {
       removeThinking(thinkingId);
       addMessage('ai', 'Could not reach the backend. Make sure the server is running at http://127.0.0.1:8000');
@@ -389,13 +353,19 @@
     chip.innerHTML = `📄 <span>${file.name} — uploading...</span>`;
     document.getElementById('fileList').appendChild(chip);
 
+    const uploadDomain = document.getElementById('uploadDomain').value;
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('domain', uploadDomain);
 
     try {
       const res = await fetch('http://127.0.0.1:8000/upload', { method: 'POST', body: formData });
-      await res.json();
-      chip.innerHTML = `📄 <span>${file.name} ✅</span>`;
+      const data = await res.json();
+      if (data.chunks_created === 0) {
+        chip.innerHTML = `📄 <span>${file.name} ✅ (already in database)</span>`;
+      } else {
+        chip.innerHTML = `📄 <span>${file.name} ✅</span>`;
+      }
     } catch (e) {
       chip.innerHTML = `📄 <span>${file.name} ❌ failed</span>`;
     }
@@ -407,7 +377,7 @@
     div.className = `msg ${role}`;
     div.innerHTML = `
       <div class="avatar ${role === 'user' ? 'user-av' : 'ai-av'}">${role === 'user' ? 'You' : 'AI'}</div>
-      <div class="bubble">${text}</div>
+      <div class="bubble">${text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br/>')}</div>
     `;
     msgs.appendChild(div);
     msgs.scrollTop = msgs.scrollHeight;
@@ -425,12 +395,12 @@
   }
 
   function removeThinking(id) { document.getElementById(id)?.remove(); }
-
   function handleKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }
-
   function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 120) + 'px'; }
 
   function newChat() {
+    sessionId = null;
+    localStorage.removeItem('session_id');
     document.getElementById('messages').innerHTML = '';
     document.getElementById('messages').style.display = 'none';
     document.getElementById('emptyState').style.display = 'flex';

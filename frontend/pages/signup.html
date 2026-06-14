@@ -5,45 +5,33 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Sign up · AI Generalist</title>
   <link rel="stylesheet" href="../css/style.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     body { display: flex; flex-direction: column; min-height: 100vh; }
-
     .auth-wrap {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 40px 20px;
+      flex: 1; display: flex; align-items: center;
+      justify-content: center; padding: 40px 20px;
     }
-
     .auth-box { width: 100%; max-width: 400px; }
-
     .auth-header { text-align: center; margin-bottom: 32px; }
     .auth-header h1 {
       font-family: 'Instrument Serif', serif;
-      font-size: 1.8rem;
-      letter-spacing: -0.02em;
-      margin-bottom: 6px;
+      font-size: 1.8rem; letter-spacing: -0.02em; margin-bottom: 6px;
     }
     .auth-header p { color: var(--text2); font-size: 0.88rem; }
-
     .auth-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 32px 28px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 32px 28px;
     }
-
     .btn-full { width: 100%; padding: 11px; justify-content: center; margin-top: 6px; }
-
-    .auth-foot {
-      text-align: center;
-      margin-top: 18px;
-      color: var(--text2);
-      font-size: 0.85rem;
-    }
+    .auth-foot { text-align: center; margin-top: 18px; color: var(--text2); font-size: 0.85rem; }
     .auth-foot a { color: var(--accent2); }
     .auth-foot a:hover { text-decoration: underline; }
+    .success-msg {
+      background: rgba(52,211,153,0.08); border: 1px solid rgba(52,211,153,0.3);
+      color: #34d399; border-radius: 8px; padding: 10px 14px;
+      font-size: 0.85rem; margin-bottom: 14px; display: none;
+    }
   </style>
 </head>
 <body>
@@ -60,14 +48,13 @@
 
 <div class="auth-wrap">
   <div class="auth-box">
-
     <div class="auth-header">
       <h1>Create your account</h1>
       <p>Start working smarter today — it's free</p>
     </div>
-
     <div class="auth-card">
       <div class="error-msg" id="errorMsg"></div>
+      <div class="success-msg" id="successMsg"></div>
 
       <div class="form-group">
         <label>Full name</label>
@@ -88,7 +75,6 @@
         Already have an account? <a href="login.html">Log in</a>
       </div>
     </div>
-
   </div>
 </div>
 
@@ -104,11 +90,19 @@
     localStorage.setItem('theme', html.getAttribute('data-theme'));
   }
 
-  function handleSignup() {
+  const SUPABASE_URL = 'https://kswjqdasbffgkbohduqp.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_1QX7HZ5MNd3tWzfKIOICHw_8grUCXXo';
+  const { createClient } = supabase;
+  const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  async function handleSignup() {
     const name = document.getElementById('name').value.trim();
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
     const err = document.getElementById('errorMsg');
+    const success = document.getElementById('successMsg');
+    err.style.display = 'none';
+    success.style.display = 'none';
 
     if (!name || !email || !password) {
       err.textContent = 'Please fill in all fields.';
@@ -121,7 +115,20 @@
       return;
     }
 
-    window.location.href = 'dashboard.html';
+    const { data, error } = await supabaseClient.auth.signUp({
+      email,
+      password,
+      options: { data: { full_name: name } }
+    });
+
+    if (error) {
+      err.textContent = error.message;
+      err.style.display = 'block';
+      return;
+    }
+
+    success.textContent = 'Account created! Check your email to confirm, then log in.';
+    success.style.display = 'block';
   }
 </script>
 
