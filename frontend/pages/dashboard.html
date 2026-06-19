@@ -219,7 +219,7 @@
       const { data: { session } } = await supabaseClient.auth.getSession();
       const userId = session?.user?.id || '';
       
-      const res = await fetch(`http://127.0.0.1:8000/conversations?user_id=${userId}`);
+      const res = await fetch(`https://samar-05-ai-generalist.hf.space/conversations?user_id=${userId}`);
       const data = await res.json();
 
       if (!data.conversations || data.conversations.length === 0) {

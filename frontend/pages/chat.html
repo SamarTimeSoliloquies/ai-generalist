@@ -303,7 +303,7 @@
   async function loadPreviousMessages() {
     if (!sessionId) return;
     try {
-      const res = await fetch(`http://127.0.0.1:8000/history/${sessionId}`);
+      const res = await fetch(`https://samar-05-ai-generalist.hf.space/history/${sessionId}`);
       const data = await res.json();
       if (data.uploaded_files && data.uploaded_files.length > 0) {
         document.getElementById('fileListWrap').style.display = 'block';
@@ -351,7 +351,7 @@
       const { data: { session } } = await supabaseClient.auth.getSession();
       const userId = session?.user?.id || '';
 
-      const res = await fetch('http://127.0.0.1:8000/chat', {
+      const res = await fetch('https://samar-05-ai-generalist.hf.space/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question: text, domain, session_id: sessionId || '', user_id: userId })
@@ -363,7 +363,7 @@
       localStorage.setItem('session_id', sessionId);
 
       for (const filename of pendingFiles) {
-        await fetch('http://127.0.0.1:8000/track-file', {
+        await fetch('https://samar-05-ai-generalist.hf.space/track-file', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ session_id: sessionId, filename })
@@ -373,7 +373,7 @@
 
     } catch (e) {
       removeThinking(thinkingId);
-      addMessage('ai', 'Could not reach the backend. Make sure the server is running at http://127.0.0.1:8000');
+      addMessage('ai', 'Could not reach the backend.');
     }
 
     document.getElementById('sendBtn').disabled = false;
@@ -395,7 +395,7 @@
     formData.append('domain', uploadDomain);
 
     try {
-      const res = await fetch('http://127.0.0.1:8000/upload', { method: 'POST', body: formData });
+      const res = await fetch('https://samar-05-ai-generalist.hf.space/upload', { method: 'POST', body: formData });
       const data = await res.json();
       if (data.chunks_created === 0) {
         chip.innerHTML = `📄 <span>${file.name} ✅ (already in database)</span>`;
